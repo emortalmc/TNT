@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.io.path.nameWithoutExtension
 
 
-class TNTLoader(val path: Path, val instance: Instance) : IChunkLoader {
+class TNTLoader(val instance: Instance, val path: Path) : IChunkLoader {
 
     private val LOGGER = LoggerFactory.getLogger(TNTLoader::class.java)
 
@@ -35,6 +35,10 @@ class TNTLoader(val path: Path, val instance: Instance) : IChunkLoader {
 
     init {
 
+        val instance = MinecraftServer.getInstanceManager().createInstanceContainer()
+        val tntLoader = TNTLoader(instance, Path.of("path/to/world"))
+        instance.chunkLoader = tntLoader
+
         if (!Files.exists(path)) {
             // No world folder
             LOGGER.error("Path doesn't exist")
@@ -42,7 +46,7 @@ class TNTLoader(val path: Path, val instance: Instance) : IChunkLoader {
             if (Files.isDirectory(path.parent.resolve(path.nameWithoutExtension))) {
                 LOGGER.info("Path is an anvil world. Converting!")
 
-                TNT.convertAnvilToTNT(path.parent.resolve(path.nameWithoutExtension))
+                TNT.convertAnvilToTNT(path)
                 LOGGER.info("Converted!")
             }
         }
