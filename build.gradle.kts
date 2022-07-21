@@ -46,7 +46,7 @@ val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
 
 compileKotlin.kotlinOptions {
-    freeCompilerArgs = listOf("-Xinline-classes -Xuse-k2")
+    freeCompilerArgs = listOf("-Xinline-classes")
 }
 
 publishing {
