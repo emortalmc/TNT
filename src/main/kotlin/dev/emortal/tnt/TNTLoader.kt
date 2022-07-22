@@ -35,10 +35,6 @@ class TNTLoader(val instance: Instance, val path: Path) : IChunkLoader {
 
     init {
 
-        val instance = MinecraftServer.getInstanceManager().createInstanceContainer()
-        val tntLoader = TNTLoader(instance, Path.of("path/to/world"))
-        instance.chunkLoader = tntLoader
-
         if (!Files.exists(path)) {
             // No world folder
             LOGGER.error("Path doesn't exist")
