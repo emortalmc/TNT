@@ -23,7 +23,7 @@ dependencies {
 
     compileOnly("com.github.Minestom:Minestom:d596992c0e")
 
-    implementation("com.github.luben:zstd-jni:1.5.2-3")
+    compileOnly("com.github.luben:zstd-jni:1.5.2-3")
 }
 
 tasks {

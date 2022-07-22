@@ -93,8 +93,9 @@ object TNT {
 
         val mcaFiles = Files.list(path.parent.resolve(path.nameWithoutExtension).resolve("region")).collect(
             Collectors.toSet())
+        println(mcaFiles.size)
         val convertInstance = instanceManager.createInstanceContainer()
-        val loader = ConversionAnvilLoader(path)
+        val loader = ConversionAnvilLoader(path.parent.resolve(path.nameWithoutExtension))
         convertInstance.chunkLoader = loader
 
         val countDownLatch = CountDownLatch((mcaFiles.size) * 1024)
