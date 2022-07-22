@@ -91,7 +91,7 @@ object TNT {
     fun convertAnvilToTNT(path: Path) {
         val instanceManager = MinecraftServer.getInstanceManager()
 
-        val mcaFiles = Files.list(path.resolve("region")).collect(
+        val mcaFiles = Files.list(path.parent.resolve(path.nameWithoutExtension).resolve("region")).collect(
             Collectors.toSet())
         val convertInstance = instanceManager.createInstanceContainer()
         val loader = ConversionAnvilLoader(path)
