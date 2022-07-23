@@ -4,8 +4,8 @@
 TNT is an experimental world format for Minestom
 
 ## Cool stuff
- - Very small file size (~80kb in TNT vs ~13mb in Anvil)
- - Very fast loading times (23ms - idk what Anvil is)
+ - Very small file size (~80kb in TNT vs ~13mb in Anvil for my lobby)
+ - Very fast loading times (23ms for my lobby - idk what Anvil is)
  - [Converts from Anvil automatically](#anvil-conversion)
  - [Could be loaded from databases, like Slime worlds](#tnt-sources)
  - Stores block nbt (like sign text)
