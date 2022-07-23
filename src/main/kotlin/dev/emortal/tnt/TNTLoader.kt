@@ -1,8 +1,11 @@
 package dev.emortal.tnt
 
 import com.github.luben.zstd.Zstd
+import dev.emortal.tnt.source.TNTSource
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.Point
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.instance.Chunk
 import net.minestom.server.instance.DynamicChunk
 import net.minestom.server.instance.IChunkLoader
@@ -15,41 +18,19 @@ import org.jglrxavpok.hephaistos.nbt.CompressedProcesser
 import org.jglrxavpok.hephaistos.nbt.NBTCompound
 import org.jglrxavpok.hephaistos.nbt.NBTReader
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
-import kotlin.io.path.nameWithoutExtension
 
 
-class TNTLoader(val instance: Instance, val path: Path) : IChunkLoader {
+val LOGGER = LoggerFactory.getLogger(TNTLoader::class.java)
 
-    private val LOGGER = LoggerFactory.getLogger(TNTLoader::class.java)
-
-    companion object {
-
-        //val fastCompressor = LZ4CompressorWithLength(LZ4Factory.fastestInstance().fastCompressor())
-        //val fastDecompressor = LZ4DecompressorWithLength(LZ4Factory.fastestInstance().fastDecompressor())
-    }
+class TNTLoader(val instance: Instance, val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunkLoader {
 
     private val chunksMap = Long2ObjectOpenHashMap<TNTChunk>()
 
     init {
-
-        if (!Files.exists(path)) {
-            // No world folder
-            LOGGER.error("Path doesn't exist")
-
-            if (Files.isDirectory(path.parent.resolve(path.nameWithoutExtension))) {
-                LOGGER.info("Path is an anvil world. Converting!")
-
-                TNT.convertAnvilToTNT(path)
-                LOGGER.info("Converted!")
-            }
-        }
-
         val blockManager = MinecraftServer.getBlockManager()
 
-        val byteArray = Files.readAllBytes(path)
+        val byteArray = tntSource.load().readAllBytes()
         val decompressed = Zstd.decompress(byteArray, Zstd.decompressedSize(byteArray).toInt())
         val reader = BinaryReader(decompressed)
         val nbtReader = NBTReader(reader, CompressedProcesser.NONE)
@@ -100,7 +81,7 @@ class TNTLoader(val instance: Instance, val path: Path) : IChunkLoader {
                                 Block.fromStateId(stateId)!!
                             }
 
-                            batch.setBlock(x, y + (sectionY * 16), z, block)
+                            batch.setBlock(x + offset.blockX(), y + (sectionY * 16) + offset.blockY(), z + offset.blockZ(), block)
                         }
                     }
                 }
@@ -119,11 +100,6 @@ class TNTLoader(val instance: Instance, val path: Path) : IChunkLoader {
     }
 
     override fun loadChunk(instance: Instance, chunkX: Int, chunkZ: Int): CompletableFuture<Chunk?> {
-        if (!Files.exists(path)) {
-            // No world folder
-            return CompletableFuture.completedFuture(null)
-        }
-
         val mstChunk = chunksMap[ChunkUtils.getChunkIndex(chunkX, chunkZ)] ?: return CompletableFuture.completedFuture(null)
         val chunk = DynamicChunk(instance, chunkX, chunkZ)
 
@@ -143,4 +119,5 @@ class TNTLoader(val instance: Instance, val path: Path) : IChunkLoader {
         // no
         return CompletableFuture.completedFuture(null)
     }
+
 }
