@@ -22,11 +22,17 @@ Creating a Minestom instance
 // In Kotlin
 val instance = MinecraftServer.getInstanceManager().createInstanceContainer()
 val tntLoader = TNTLoader(instance, FileTNTSource(Path.of("path/to/world.tnt")))
+// Shorthand version
+val tntLoader = TNTLoader(instance, "path/to/world.tnt")
+
 instance.chunkLoader = tntLoader
 
 // In Java
 InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
 TNTLoader tntLoader = new TNTLoader(instance, FileTNTSource(Path.of("path/to/world.tnt")));
+// Shorthand version
+TNTLoader tntLoader = new TNTLoader(instance, "path/to/world.tnt")
+        
 instance.setChunkLoader(tntLoader);
 ```
 
@@ -43,9 +49,10 @@ For example:
  - /worlds/world/ <- Anvil world folder
  - /worlds/world.tnt <- TNT world file (Put this path into the `TNTSource`)
  
+You may also convert an anvil world to TNT manually with `TNT.convertAnvilToTNT(pathToAnvil, tntSaveSource)`
  
 ## TNT Sources
-The TNTLoader can be loaded from wherever you want (however only has `FileTNTSource` built in)
+TNT worlds can be loaded and saved wherever you want (however only `FileTNTSource` is built in)
 
 For example, you could make it read from Redis, MongoDB, MySQL or any sort of datastore.
 

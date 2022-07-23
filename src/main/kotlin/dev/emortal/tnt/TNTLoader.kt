@@ -1,6 +1,7 @@
 package dev.emortal.tnt
 
 import com.github.luben.zstd.Zstd
+import dev.emortal.tnt.source.FileTNTSource
 import dev.emortal.tnt.source.TNTSource
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import net.minestom.server.MinecraftServer
@@ -18,12 +19,15 @@ import org.jglrxavpok.hephaistos.nbt.CompressedProcesser
 import org.jglrxavpok.hephaistos.nbt.NBTCompound
 import org.jglrxavpok.hephaistos.nbt.NBTReader
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
 
 val LOGGER = LoggerFactory.getLogger(TNTLoader::class.java)
 
 class TNTLoader(val instance: Instance, val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunkLoader {
+
+    constructor(instance: Instance, path: String, offset: Point = Pos.ZERO) : this(instance, FileTNTSource(Path.of(path)), offset)
 
     private val chunksMap = Long2ObjectOpenHashMap<TNTChunk>()
 
@@ -81,7 +85,8 @@ class TNTLoader(val instance: Instance, val tntSource: TNTSource, val offset: Po
                                 Block.fromStateId(stateId)!!
                             }
 
-                            batch.setBlock(x + offset.blockX(), y + (sectionY * 16) + offset.blockY(), z + offset.blockZ(), block)
+                            // TODO: fix X and Z offset
+                            batch.setBlock(x/* + offset.blockX()*/, y + (sectionY * 16) + offset.blockY(), z/* + offset.blockZ()*/, block)
                         }
                     }
                 }
@@ -105,6 +110,7 @@ class TNTLoader(val instance: Instance, val tntSource: TNTSource, val offset: Po
 
         val future = CompletableFuture<Chunk?>()
 
+        // Copy chunk light from mstChunk to the new chunk
         chunk.sections.forEachIndexed { i, it ->
             val sec = mstChunk.sections[i]
             it.blockLight = sec.blockLight
@@ -112,12 +118,15 @@ class TNTLoader(val instance: Instance, val tntSource: TNTSource, val offset: Po
         }
         mstChunk.chunkBatch.apply(instance, chunk) { future.complete(chunk) }
 
+        instance.saveChunksToStorage()
+
         return future
     }
 
     override fun saveChunk(chunk: Chunk): CompletableFuture<Void> {
-        // no
         return CompletableFuture.completedFuture(null)
     }
+
+    override fun supportsParallelLoading(): Boolean = true
 
 }

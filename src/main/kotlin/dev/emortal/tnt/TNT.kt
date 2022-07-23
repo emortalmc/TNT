@@ -1,6 +1,9 @@
 package dev.emortal.tnt
 
 import com.github.luben.zstd.Zstd
+import dev.emortal.tnt.source.TNTSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import net.minestom.server.MinecraftServer
 import net.minestom.server.instance.Chunk
 import net.minestom.server.instance.block.Block
@@ -17,12 +20,12 @@ object TNT {
 
     private val LOGGER = LoggerFactory.getLogger(TNT::class.java)
 
+    val tntScope = CoroutineScope(Dispatchers.IO)
+
     /**
-     * Creates a .TNT world from chunks
-     * @param chunks The chunks to use to create the world
-     * @param path Where to create the file
+     * Saves a .TNT world from chunks
      */
-    fun createTNTFile(chunks: Collection<Chunk>, path: Path) {
+    fun createTNTFile(chunks: Collection<Chunk>, tntSource: TNTSource) {
         val writer = BinaryWriter()
 
         writer.writeInt(chunks.size)
@@ -82,23 +85,28 @@ object TNT {
         val bytes: ByteArray = writer.toByteArray()
         val compressed = Zstd.compress(bytes)
 
+        tntSource.save(compressed)
+
         writer.close()
         writer.flush()
-
-        Files.write(path, compressed)
     }
 
-    fun convertAnvilToTNT(path: Path) {
+    /**
+     * Converts an anvil folder to a TNT file
+     *
+     * Source support should be added
+     */
+    fun convertAnvilToTNT(pathToAnvil: Path, tntSaveSource: TNTSource) {
         val instanceManager = MinecraftServer.getInstanceManager()
 
-        val mcaFiles = Files.list(path.parent.resolve(path.nameWithoutExtension).resolve("region")).collect(
+        val mcaFiles = Files.list(pathToAnvil.resolve("region")).collect(
             Collectors.toSet())
-        println(mcaFiles.size)
+
         val convertInstance = instanceManager.createInstanceContainer()
-        val loader = ConversionAnvilLoader(path.parent.resolve(path.nameWithoutExtension))
+        val loader = ConversionAnvilLoader(pathToAnvil)
         convertInstance.chunkLoader = loader
 
-        val countDownLatch = CountDownLatch((mcaFiles.size) * 1024)
+        val countDownLatch = CountDownLatch((mcaFiles.size) * 32 * 32) // each MCA file contains 32 chunks
         val chunks: MutableSet<Chunk> = ConcurrentHashMap.newKeySet()
 
         mcaFiles.forEach {
@@ -106,34 +114,24 @@ object TNT {
             val rX = args[0].toInt()
             val rZ = args[1].toInt()
 
-            for (x in rX * 32 until rX * 32 + 32)
+            for (x in rX * 32 until rX * 32 + 32) {
                 for (z in rZ * 32 until rZ * 32 + 32) {
-                    convertInstance.loadChunk(x, z).thenAccept {
-                        var hasBlocks = false
-                        for (x in 0 until 16) {
-                            if (hasBlocks) break
-                            for (y in -64 until 320) {
-                                if (hasBlocks) break
-                                for (z in 0 until 16) {
-                                    if (it.getBlock(x, y, z) != Block.AIR) {
-                                        hasBlocks = true
-                                        break
-                                    }
-                                }
-                            }
-                        }
-
+                    convertInstance.loadChunk(x, z).thenAcceptAsync {
                         // Ignore chunks that contain no blocks
-                        if (hasBlocks) chunks.add(it)
+                        if (it.sections.any { it.blockPalette().count() > 0 }) chunks.add(it)
 
                         countDownLatch.countDown()
                     }
                 }
+            }
         }
 
+        val before = System.nanoTime()
         countDownLatch.await()
+        println("Took ${(System.nanoTime() - before) / 1_000_000}ms to convert")
 
-        createTNTFile(chunks, path)
+        // TODO: make source independant
+        createTNTFile(chunks, tntSaveSource)
 
         instanceManager.unregisterInstance(convertInstance)
     }

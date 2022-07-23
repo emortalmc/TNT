@@ -23,6 +23,7 @@ dependencies {
 
     compileOnly("com.github.Minestom:Minestom:d596992c0e")
 
+    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
     implementation("com.github.luben:zstd-jni:1.5.2-3")
 }
 

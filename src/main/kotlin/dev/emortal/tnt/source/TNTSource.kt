@@ -6,6 +6,6 @@ interface TNTSource {
 
     fun load(): InputStream
 
-    //fun save(): InputStream
+    fun save(bytes: ByteArray)
 
 }
