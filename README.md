@@ -28,13 +28,16 @@ val tntLoader = TNTLoader(instance, "path/to/world.tnt")
 instance.chunkLoader = tntLoader
 
 // In Java
-InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
-TNTLoader tntLoader = new TNTLoader(instance, FileTNTSource(Path.of("path/to/world.tnt")));
+final var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+final var tntLoader = new TNTLoader(instance, FileTNTSource(Path.of("path/to/world.tnt")));
 // Shorthand version
-TNTLoader tntLoader = new TNTLoader(instance, "path/to/world.tnt")
+final var tntLoader = new TNTLoader(instance, "path/to/world.tnt")
         
 instance.setChunkLoader(tntLoader);
 ```
+
+### Important
+When an instance using a TNT loader has been unregistered, you must run `TNTLoader.unload()` otherwise memory will not be freed.
 
 ## Signs are blank? (or any other block has no data)
 TNT needs some block handlers in order to load block data.

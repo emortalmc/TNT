@@ -25,6 +25,7 @@ dependencies {
 
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
     implementation("com.github.luben:zstd-jni:1.5.2-3")
+    implementation("com.github.jinahya:bit-io2:0.1.3")
 }
 
 tasks {

@@ -1,5 +1,8 @@
 package dev.emortal.tnt
 
+import com.github.jinahya.bit.io.BitInput
+import com.github.jinahya.bit.io.BitInputAdapter
+import com.github.jinahya.bit.io.StreamByteInput
 import com.github.luben.zstd.Zstd
 import dev.emortal.tnt.source.FileTNTSource
 import dev.emortal.tnt.source.TNTSource
@@ -7,12 +10,8 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
-import net.minestom.server.instance.Chunk
-import net.minestom.server.instance.DynamicChunk
-import net.minestom.server.instance.IChunkLoader
-import net.minestom.server.instance.Instance
+import net.minestom.server.instance.*
 import net.minestom.server.instance.batch.ChunkBatch
-import net.minestom.server.instance.block.Block
 import net.minestom.server.utils.binary.BinaryReader
 import net.minestom.server.utils.chunk.ChunkUtils
 import org.jglrxavpok.hephaistos.nbt.CompressedProcesser
@@ -25,83 +24,110 @@ import java.util.concurrent.CompletableFuture
 
 val LOGGER = LoggerFactory.getLogger(TNTLoader::class.java)
 
-class TNTLoader(val instance: Instance, val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunkLoader {
+class TNTLoader(val instance: InstanceContainer, val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunkLoader {
 
-    constructor(instance: Instance, path: String, offset: Point = Pos.ZERO) : this(instance, FileTNTSource(Path.of(path)), offset)
+    constructor(instance: InstanceContainer, path: String, offset: Point = Pos.ZERO) : this(instance, FileTNTSource(Path.of(path)), offset)
 
-    private val chunksMap = Long2ObjectOpenHashMap<TNTChunk>()
+    private var chunksMap: Long2ObjectOpenHashMap<TNTChunk>
 
     init {
         val blockManager = MinecraftServer.getBlockManager()
 
         val byteArray = tntSource.load().readAllBytes()
         val decompressed = Zstd.decompress(byteArray, Zstd.decompressedSize(byteArray).toInt())
-        val reader = BinaryReader(decompressed)
-        val nbtReader = NBTReader(reader, CompressedProcesser.NONE)
+        val binaryReader = BinaryReader(decompressed)
+        val nbtReader = NBTReader(binaryReader, CompressedProcesser.NONE)
 
-        val chunks = reader.readInt()
+        val reader: BitInput = BitInputAdapter.from(StreamByteInput.from(binaryReader))
+
+        val hasLights = reader.readBoolean()
+
+        val chunks = reader.readInt32()
+
+        chunksMap = Long2ObjectOpenHashMap<TNTChunk>(chunks)
 
         for (chunkI in 0 until chunks) {
             val batch = ChunkBatch()
 
-            val chunkX = reader.readInt()
-            val chunkZ = reader.readInt()
+            val chunkX = reader.readInt32()
+            val chunkZ = reader.readInt32()
 
-            val minSection = reader.readByte().toInt()
-            val maxSection = reader.readByte().toInt()
+            val minSection = reader.readByte8().toInt()
+            val maxSection = reader.readByte8().toInt()
 
             val mstChunk = TNTChunk(batch, maxSection, minSection)
 
-            for (sectionY in minSection until maxSection) {
-                var airSkip = 0
-                val section = mstChunk.sections[sectionY - minSection]
+            if (hasLights) {
+                for (sectionY in minSection until maxSection) {
+                    val section = mstChunk.sections[sectionY - minSection]
 
-                for (x in 0 until Chunk.CHUNK_SIZE_X) {
-                    for (y in 0 until Chunk.CHUNK_SECTION_SIZE) {
-                        for (z in 0 until Chunk.CHUNK_SIZE_X) {
-                            if (airSkip > 0) {
-                                airSkip--
-                                continue
-                            }
+                    val blockLightCount = reader.readInt32()
+                    val blockLights = ByteArray(blockLightCount) {
+                        reader.readByte8()
+                    }
 
-                            val stateId = reader.readShort()
+                    val skyLightCount = reader.readInt32()
+                    val skyLights = ByteArray(skyLightCount) {
+                        reader.readByte8()
+                    }
 
-                            if (stateId == 0.toShort()) {
-                                airSkip = reader.readInt() - 1
-                                continue
-                            }
+                    section.blockLight = blockLights
+                    section.skyLight = skyLights
+                }
+            }
 
-                            val hasNbt = reader.readBoolean()
+            val nbtCount = reader.readInt32()
+            val nbtMap = mutableMapOf<Int, NBTCompound>()
+            repeat(nbtCount) {
+                nbtMap[binaryReader.readInt()] = nbtReader.read() as NBTCompound
+            }
 
-                            val block = if (hasNbt) {
-                                val nbt = nbtReader.read()
+            val maxBitsForState = reader.readInt32()
 
-                                Block.fromStateId(stateId)!!
-                                    .let {
-                                        it.withHandler(blockManager.getHandlerOrDummy(it.name()))
-                                    }
-                                    .withNbt(nbt as NBTCompound)
-                            } else {
-                                Block.fromStateId(stateId)!!
-                            }
+            val paletteSize = reader.readInt32()
+            val paletteStrings = mutableListOf<String>()
 
-                            // TODO: fix X and Z offset
-                            batch.setBlock(x/* + offset.blockX()*/, y + (sectionY * 16) + offset.blockY(), z/* + offset.blockZ()*/, block)
+            repeat(paletteSize) {
+                val blockString = binaryReader.readSizedString()
+                paletteStrings.add(blockString)
+            }
+
+            val paletteBlocks = paletteStrings.map { TNT.blockFromString(it) }
+
+            val blockCount = reader.readInt32()
+            var blockI = 0
+
+            blockLoop@ for (x in 0 until Chunk.CHUNK_SIZE_X) {
+                for (y in -64 until 320) {
+                    for (z in 0 until Chunk.CHUNK_SIZE_X) {
+                        val index = reader.readInt(maxBitsForState)
+                        val block = paletteBlocks[index]
+
+                        val blockIndex = ChunkUtils.getBlockIndex(x, y, z)
+
+                        if (nbtMap.containsKey(blockIndex)) {
+
+                            mstChunk.chunkBatch.setBlock(x, y, z, block.withNbt(nbtMap[ChunkUtils.getBlockIndex(x, y, z)]).withHandler(blockManager.getHandlerOrDummy(block.name())))
+                        } else {
+                            mstChunk.chunkBatch.setBlock(x, y, z, block)
                         }
+
+
+                        blockI++
+                        if (blockI >= blockCount) break@blockLoop
                     }
                 }
-
-                val blockLights = reader.readByteArray()
-                val skyLights = reader.readByteArray()
-                section.blockLight = blockLights
-                section.skyLight = skyLights
             }
+
+            nbtMap.clear()
+            paletteStrings.clear()
 
             chunksMap[ChunkUtils.getChunkIndex(chunkX, chunkZ)] = mstChunk
         }
 
-        reader.close()
+        binaryReader.close()
         nbtReader.close()
+        reader.close()
     }
 
     override fun loadChunk(instance: Instance, chunkX: Int, chunkZ: Int): CompletableFuture<Chunk?> {
@@ -118,8 +144,6 @@ class TNTLoader(val instance: Instance, val tntSource: TNTSource, val offset: Po
         }
         mstChunk.chunkBatch.apply(instance, chunk) { future.complete(chunk) }
 
-        instance.saveChunksToStorage()
-
         return future
     }
 
@@ -127,6 +151,17 @@ class TNTLoader(val instance: Instance, val tntSource: TNTSource, val offset: Po
         return CompletableFuture.completedFuture(null)
     }
 
+    /**
+     * Clears the loaded chunks and then removes itself from the instance
+     *
+     * Should be called when the instance is unloaded
+     */
+    fun unload() {
+        chunksMap.clear()
+        instance.chunkLoader = null
+    }
+
     override fun supportsParallelLoading(): Boolean = true
+    override fun supportsParallelSaving(): Boolean = true
 
 }
