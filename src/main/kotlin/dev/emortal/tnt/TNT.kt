@@ -143,7 +143,7 @@ object TNT {
         val loader = ConversionAnvilLoader(pathToAnvil)
         convertInstance.chunkLoader = loader
 
-        val countDownLatch = CountDownLatch((mcaFiles.size) * 32 * 32) // each MCA file contains 32 chunks
+        val countDownLatch = CountDownLatch((mcaFiles.size) * 32 * 32) // each MCA file contains 32 chunks on each axis
         val chunks: MutableSet<Chunk> = ConcurrentHashMap.newKeySet()
 
         mcaFiles.forEach {

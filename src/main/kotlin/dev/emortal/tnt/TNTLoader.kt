@@ -10,7 +10,10 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
-import net.minestom.server.instance.*
+import net.minestom.server.instance.Chunk
+import net.minestom.server.instance.DynamicChunk
+import net.minestom.server.instance.IChunkLoader
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.batch.ChunkBatch
 import net.minestom.server.utils.binary.BinaryReader
 import net.minestom.server.utils.chunk.ChunkUtils
@@ -24,9 +27,9 @@ import java.util.concurrent.CompletableFuture
 
 val LOGGER = LoggerFactory.getLogger(TNTLoader::class.java)
 
-class TNTLoader(val instance: InstanceContainer, val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunkLoader {
+class TNTLoader(val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunkLoader {
 
-    constructor(instance: InstanceContainer, path: String, offset: Point = Pos.ZERO) : this(instance, FileTNTSource(Path.of(path)), offset)
+    constructor(path: String, offset: Point = Pos.ZERO) : this(FileTNTSource(Path.of(path)), offset)
 
     private var chunksMap: Long2ObjectOpenHashMap<TNTChunk>
 
@@ -152,13 +155,14 @@ class TNTLoader(val instance: InstanceContainer, val tntSource: TNTSource, val o
     }
 
     /**
-     * Clears the loaded chunks and then removes itself from the instance
+     * Clears the loaded chunks
+     *
+     * You may also want to set the chunk loader of the instance to `null`
      *
      * Should be called when the instance is unloaded
      */
     fun unload() {
         chunksMap.clear()
-        instance.chunkLoader = null
     }
 
     override fun supportsParallelLoading(): Boolean = true

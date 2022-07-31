@@ -29,9 +29,9 @@ instance.chunkLoader = tntLoader
 
 // In Java
 final var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
-final var tntLoader = new TNTLoader(instance, FileTNTSource(Path.of("path/to/world.tnt")));
+final var tntLoader = new TNTLoader(FileTNTSource(Path.of("path/to/world.tnt")));
 // Shorthand version
-final var tntLoader = new TNTLoader(instance, "path/to/world.tnt")
+final var tntLoader = new TNTLoader("path/to/world.tnt")
         
 instance.setChunkLoader(tntLoader);
 ```
