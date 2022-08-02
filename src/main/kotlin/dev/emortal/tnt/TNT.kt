@@ -33,14 +33,14 @@ object TNT {
         val writer = BitOutputAdapter.from(StreamByteOutput.from(binaryWriter))
 
         // Write settings
-        writer.writeBoolean(saveLights)
+        binaryWriter.writeBoolean(saveLights)
 
         writer.writeInt32(chunks.size)
 
-        val paletteBlocks = ArrayList<String>()
-        val paletteIndexes = ArrayList<Int>(chunks.size * 16 * 384 * 16)
-
         chunks.forEach {
+
+            val paletteBlocks = mutableListOf<String>()
+            val paletteIndexes = mutableListOf<Int>()
 
             val indexToNBT = ConcurrentHashMap<Int, NBTCompound>()
 
@@ -53,17 +53,8 @@ object TNT {
             if (saveLights) {
                 // Write lighting
                 it.sections.forEach { section ->
-                    val blockLight = section.blockLight
-                    writer.writeInt32(blockLight.size)
-                    blockLight.forEach {
-                        writer.writeByte8(it)
-                    }
-
-                    val skyLight = section.skyLight
-                    writer.writeInt32(skyLight.size)
-                    skyLight.forEach {
-                        writer.writeByte8(it)
-                    }
+                    binaryWriter.writeByteArray(section.blockLight)
+                    binaryWriter.writeByteArray(section.skyLight)
                 }
             }
 
@@ -101,9 +92,8 @@ object TNT {
             writer.writeInt32(maxBitsForState)
 
             writer.writeInt32(paletteBlocks.size)
-            LOGGER.info("palette size: ${paletteBlocks.size}")
+            //LOGGER.info("palette size: ${paletteBlocks.size}")
             paletteBlocks.forEach {
-                //binaryWriter.writeShort(it)
                 binaryWriter.writeSizedString(it)
             }
 
@@ -111,7 +101,6 @@ object TNT {
             //LOGGER.info("Palette blocks indexes ${paletteIndexes.size}")
             paletteIndexes.forEach {
                 writer.writeInt(maxBitsForState, it)
-                //binaryWriter.writeInt(it)
             }
             paletteBlocks.clear()
             paletteIndexes.clear()

@@ -43,7 +43,7 @@ class TNTLoader(val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunk
 
         val reader: BitInput = BitInputAdapter.from(StreamByteInput.from(binaryReader))
 
-        val hasLights = reader.readBoolean()
+        val hasLights = binaryReader.readBoolean()
 
         val chunks = reader.readInt32()
 
@@ -64,18 +64,8 @@ class TNTLoader(val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunk
                 for (sectionY in minSection until maxSection) {
                     val section = mstChunk.sections[sectionY - minSection]
 
-                    val blockLightCount = reader.readInt32()
-                    val blockLights = ByteArray(blockLightCount) {
-                        reader.readByte8()
-                    }
-
-                    val skyLightCount = reader.readInt32()
-                    val skyLights = ByteArray(skyLightCount) {
-                        reader.readByte8()
-                    }
-
-                    section.blockLight = blockLights
-                    section.skyLight = skyLights
+                    section.blockLight = binaryReader.readByteArray()
+                    section.skyLight = binaryReader.readByteArray()
                 }
             }
 
@@ -91,8 +81,8 @@ class TNTLoader(val tntSource: TNTSource, val offset: Point = Pos.ZERO) : IChunk
             val paletteStrings = mutableListOf<String>()
 
             repeat(paletteSize) {
-                val blockString = binaryReader.readSizedString()
-                paletteStrings.add(blockString)
+                val string = binaryReader.readSizedString()
+                paletteStrings.add(string)
             }
 
             val paletteBlocks = paletteStrings.map { TNT.blockFromString(it) }

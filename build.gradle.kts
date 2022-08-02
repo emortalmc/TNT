@@ -21,7 +21,7 @@ dependencies {
     //compileOnly(kotlin("stdlib"))
     //compileOnly(kotlin("reflect"))
 
-    compileOnly("com.github.Minestom:Minestom:d596992c0e")
+    compileOnly("com.github.Minestom:Minestom:d6d1b85601")
 
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
     implementation("com.github.luben:zstd-jni:1.5.2-3")
