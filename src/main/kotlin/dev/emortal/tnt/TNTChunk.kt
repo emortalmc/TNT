@@ -1,10 +1,12 @@
 package dev.emortal.tnt
 
+import net.minestom.server.instance.Section
 import net.minestom.server.instance.batch.ChunkBatch
 
-class TNTChunk() {
+class TNTChunk(val chunkBatch: ChunkBatch, val maxSection: Int, val minSection: Int) {
 
-    var chunkBatch: ChunkBatch? = null
-    val lightArrays = mutableListOf<Pair<ByteArray, ByteArray>>()
+    val sections: List<Section> = Array(maxSection - minSection) {
+        Section()
+    }.toList()
 
 }
