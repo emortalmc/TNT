@@ -4,12 +4,13 @@
 TNT is an experimental world format for Minestom
 
 ## Cool stuff
- - Very small file size (~80kb in TNT vs ~13mb in Anvil for my lobby)
- - Very fast loading times (23ms for my lobby - idk what Anvil is)
- - [Converts from Anvil automatically](#anvil-conversion)
- - [Could be loaded from databases, like Slime worlds](#tnt-sources)
- - Stores block nbt (like sign text)
- - Stores cached light from anvil (useful because Minestom doesn't have a light engine yet)
+- Designed for small worlds (global palette)
+- Very fast loading times (23ms for my lobby - idk what Anvil is)
+- Very small file size (~80kb in TNT vs ~13mb in Anvil for my lobby)
+- [Converts from Anvil automatically](#anvil-conversion)
+- [Could be loaded from databases, like Slime worlds](#tnt-sources)
+- Stores block nbt (like sign text)
+- Stores cached light from anvil (useful because Minestom doesn't have a light engine yet)
 
 Unfortunately does not save entities (yet) as Minestom does not have entity (de)serialisation.
 
@@ -19,18 +20,9 @@ Also does not have world saving yet
 Creating a Minestom instance
 
 ```java
-// In Kotlin
-val instance = MinecraftServer.getInstanceManager().createInstanceContainer()
-val tntLoader = TNTLoader(instance, FileTNTSource(Path.of("path/to/world.tnt")))
-// Shorthand version
-val tntLoader = TNTLoader(instance, "path/to/world.tnt")
-
-instance.chunkLoader = tntLoader
-
-// In Java
 InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
-TNTLoader tntLoader = new TNTLoader(instance, FileTNTSource(Path.of("path/to/world.tnt")));
-// Shorthand version
+TNTLoader tntLoader = new TNTLoader(instance, new FileTNTSource(Path.of("path/to/world.tnt")));
+// or
 TNTLoader tntLoader = new TNTLoader(instance, "path/to/world.tnt")
         
 instance.setChunkLoader(tntLoader);
@@ -56,4 +48,4 @@ TNT worlds can be loaded and saved wherever you want (however only `FileTNTSourc
 
 For example, you could make it read from Redis, MongoDB, MySQL or any sort of datastore.
 
-You can do this by overriding `TNTSource` and creating your own source.
+You can do this by extending `TNTSource` and creating your own source.

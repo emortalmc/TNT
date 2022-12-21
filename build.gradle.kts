@@ -1,10 +1,7 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.10"
-    kotlin("plugin.serialization") version "1.7.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
     `maven-publish`
@@ -23,8 +20,7 @@ dependencies {
 
     compileOnly("com.github.Minestom:Minestom:d596992c0e")
 
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
-    implementation("com.github.luben:zstd-jni:1.5.2-3")
+    implementation("com.github.luben:zstd-jni:1.5.2-5")
 }
 
 tasks {
@@ -43,11 +39,9 @@ tasks {
     build { dependsOn(shadowJar) }
 }
 
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
-
-compileKotlin.kotlinOptions {
-    freeCompilerArgs = listOf("-Xinline-classes")
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 publishing {
