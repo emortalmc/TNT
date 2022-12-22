@@ -18,7 +18,8 @@ dependencies {
     //compileOnly(kotlin("stdlib"))
     //compileOnly(kotlin("reflect"))
 
-    compileOnly("com.github.Minestom:Minestom:d596992c0e")
+    compileOnly("com.github.Minestom:Minestom:eb06ba8664")
+//    implementation("com.github.Minestom:Minestom:eb06ba8664")
 
     implementation("com.github.luben:zstd-jni:1.5.2-5")
 }

@@ -15,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
@@ -32,56 +31,50 @@ public class TNT {
         writer.writeByte((byte) chunk.getMaxSection());
 //        LOGGER.info("Chunk {} {} min max {} {}", chunk.getChunkX(), chunk.getChunkZ(), chunk.getMinSection(), chunk.getMaxSection());
 
-        int sectionIter = 0;
-        for (Section section : chunk.getSections()) {
-            int airSkip = 0;
-            boolean needsEnding = false;
+        int airSkip = 0;
+        boolean needsEnding = false;
 
+        for (int y = chunk.getMinSection() * Chunk.CHUNK_SECTION_SIZE; y < chunk.getMaxSection() * Chunk.CHUNK_SECTION_SIZE; y++) {
             for (int x = 0; x < Chunk.CHUNK_SIZE_X; x++) {
-                for (int y = 0; y < Chunk.CHUNK_SECTION_SIZE; y++) {
-                    for (int z = 0; z < Chunk.CHUNK_SIZE_Z; z++) {
-                        Block block = chunk.getBlock(x, y + ((sectionIter + chunk.getMinSection()) * Chunk.CHUNK_SECTION_SIZE), z);
+                for (int z = 0; z < Chunk.CHUNK_SIZE_Z; z++) {
+                    Block block = chunk.getBlock(x, y, z);
 
-                        if (block.compare(Block.AIR)) {
-                            airSkip++;
-                            if (airSkip == 1) {
-                                writer.writeShort((short )0);
-//                                LOGGER.info("Wrote short 0");
-                                needsEnding = true;
-                            }
-
-                            continue;
-                        }
-                        if (airSkip > 0) {
-                            writer.writeInt(airSkip);
-//                            LOGGER.info("Wrote int {}", airSkip);
-                            needsEnding = false;
+                    // check for the air block state
+                    if (block.stateId() == 0) {
+                        airSkip++;
+                        if (airSkip == 1) {
+                            writer.writeShort((short) 0);
+                            needsEnding = true;
                         }
 
-                        airSkip = 0;
+                        continue;
+                    }
+                    if (airSkip > 0) {
+                        writer.writeInt(airSkip);
+                        needsEnding = false;
+                    }
 
-                        writer.writeShort(block.stateId());
-//                        LOGGER.info("Wrote short {}", block.stateId());
+                    airSkip = 0;
 
-                        NBTCompound nbt = block.nbt();
-                        writer.writeBoolean(block.hasNbt());
-//                        LOGGER.info("Wrote bool {}", block.hasNbt());
-                        if (nbt != null) {
-                            writer.writeNBT("blockNBT", nbt);
-                        }
+                    writer.writeShort(block.stateId());
+
+                    NBTCompound nbt = block.nbt();
+                    writer.writeBoolean(block.hasNbt());
+                    if (nbt != null) {
+                        writer.writeNBT("blockNBT", nbt);
                     }
                 }
             }
+        }
 
-            // Air skip sometimes isn't written, maybe there is a cleaner way?
-            if (needsEnding) {
-                writer.writeInt(airSkip);
-            }
+        // Air skip sometimes isn't written, maybe there is a cleaner way?
+        if (needsEnding) {
+            writer.writeInt(airSkip);
+        }
 
+        for (Section section : chunk.getSections()) {
             writer.writeByteArray(section.getBlockLight());
             writer.writeByteArray(section.getSkyLight());
-
-            sectionIter++;
         }
 
         byte[] bytes = writer.toByteArray();

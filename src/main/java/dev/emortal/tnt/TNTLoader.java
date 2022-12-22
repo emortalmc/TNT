@@ -4,8 +4,8 @@ import com.github.luben.zstd.Zstd;
 import dev.emortal.tnt.source.TNTSource;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.coordinate.Point;
 import net.minestom.server.instance.*;
+import net.minestom.server.instance.batch.BatchOption;
 import net.minestom.server.instance.batch.ChunkBatch;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.BlockManager;
@@ -22,14 +22,12 @@ import java.util.concurrent.CompletableFuture;
 
 public final class TNTLoader implements IChunkLoader {
 
-    private static Logger LOGGER = LoggerFactory.getLogger("TNTLoader");
+    private static final Logger LOGGER = LoggerFactory.getLogger("TNTLoader");
 
-    private final Instance instance;
     private final TNTSource source;
     public final Long2ObjectOpenHashMap<TNTChunk> chunksMap = new Long2ObjectOpenHashMap<>();
 
-    public TNTLoader(Instance instance, TNTSource source) throws IOException, NBTException {
-        this.instance = instance;
+    public TNTLoader(TNTSource source) throws IOException, NBTException {
         this.source = source;
 
         BlockManager blockManager = MinecraftServer.getBlockManager();
@@ -43,7 +41,8 @@ public final class TNTLoader implements IChunkLoader {
 //        LOGGER.info("Reading {} chunks", chunks);
 
         for (int chunkI = 0; chunkI < chunks; chunkI++) {
-            ChunkBatch batch = new ChunkBatch();
+            ChunkBatch batch = new ChunkBatch(new BatchOption()/*.setSendUpdate(false)*/.setUnsafeApply(true));
+//            ChunkBatch batch = new ChunkBatch();
 
             int chunkX = reader.readInt();
             int chunkZ = reader.readInt();
@@ -55,46 +54,43 @@ public final class TNTLoader implements IChunkLoader {
 
             TNTChunk mstChunk = new TNTChunk(batch, maxSection, minSection);
 
-            for (int sectionY = minSection; sectionY < maxSection; sectionY++) {
-                int airSkip = 0;
-                Section section = mstChunk.sections[sectionY - minSection];
+            int airSkip = 0;
 
+            for (int y = minSection * Chunk.CHUNK_SECTION_SIZE; y < maxSection * Chunk.CHUNK_SECTION_SIZE; y++) {
                 for (int x = 0; x < Chunk.CHUNK_SIZE_X; x++) {
-                    for (int y = 0; y < Chunk.CHUNK_SECTION_SIZE; y++) {
-                        for (int z = 0; z < Chunk.CHUNK_SIZE_X; z++) {
-                            if (airSkip > 0) {
-                                airSkip--;
-                                continue;
-                            }
-
-                            short stateId = reader.readShort();
-//                            LOGGER.info("Read short {}", stateId);
-
-                            if (stateId == 0) {
-                                airSkip = reader.readInt() - 1;
-//                                LOGGER.info("Read int {}", airSkip);
-                                continue;
-                            }
-
-                            boolean hasNbt = reader.readBoolean();
-//                            LOGGER.info("Read bool {}", hasNbt);
-
-                            Block block;
-
-                            if (hasNbt) {
-                                NBT nbt = nbtReader.read();
-
-                                Block b = Block.fromStateId(stateId);
-                                block = b.withHandler(blockManager.getHandlerOrDummy(b.name())).withNbt((NBTCompound) nbt);
-                            } else {
-                                block = Block.fromStateId(stateId);
-                            }
-
-                            batch.setBlock(x, y + (sectionY * 16), z, block);
+                    for (int z = 0; z < Chunk.CHUNK_SIZE_X; z++) {
+                        if (airSkip > 0) {
+                            airSkip--;
+                            continue;
                         }
+
+                        short stateId = reader.readShort();
+
+                        if (stateId == 0) {
+                            airSkip = reader.readInt() - 1;
+                            continue;
+                        }
+
+                        boolean hasNbt = reader.readBoolean();
+
+                        Block block;
+
+                        if (hasNbt) {
+                            NBT nbt = nbtReader.read();
+
+                            Block b = Block.fromStateId(stateId);
+                            block = b.withHandler(blockManager.getHandlerOrDummy(b.name())).withNbt((NBTCompound) nbt);
+                        } else {
+                            block = Block.fromStateId(stateId);
+                        }
+
+                        batch.setBlock(x, y, z, block);
                     }
                 }
+            }
 
+            for (int sectionY = minSection; sectionY < maxSection; sectionY++) {
+                Section section = mstChunk.sections[sectionY - minSection];
                 byte[] blockLights = reader.readByteArray();
                 byte[] skyLights = reader.readByteArray();
                 section.setBlockLight(blockLights);
