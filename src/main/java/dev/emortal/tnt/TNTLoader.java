@@ -116,10 +116,14 @@ public final class TNTLoader implements IChunkLoader {
         // Copy chunk light from mstChunk to the new chunk
         chunk.getSections().forEach(it -> {
             Section sec = mstChunk.sections[chunk.getSections().indexOf(it)];
+
+
+
             it.setBlockLight(sec.getBlockLight());
             it.setSkyLight(sec.getSkyLight());
         });
 
+        // We can use unsafe as it does not matter what thread the callback is returned from
         mstChunk.batch.unsafeApply(instance, chunk, future::complete);
 
         return future;

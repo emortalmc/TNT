@@ -1,5 +1,6 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.internal.impldep.junit.runner.Version.id
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
@@ -18,8 +19,10 @@ dependencies {
     //compileOnly(kotlin("stdlib"))
     //compileOnly(kotlin("reflect"))
 
-    compileOnly("com.github.Minestom:Minestom:eb06ba8664")
-//    implementation("com.github.Minestom:Minestom:eb06ba8664")
+//    compileOnly("com.github.hollow-cube:Minestom:e6d4a2cc91")
+//    implementation("com.github.hollow-cube:Minestom:a7440639c8")
+    implementation("com.github.Minestom:Minestom:8ad2c7701f")
+    implementation("ch.qos.logback:logback-classic:1.4.6")
 
     implementation("com.github.luben:zstd-jni:1.5.2-5")
 }
