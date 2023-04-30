@@ -49,3 +49,6 @@ TNT worlds can be loaded and saved wherever you want (however only `FileTNTSourc
 For example, you could make it read from Redis, MongoDB, MySQL or any sort of datastore.
 
 You can do this by extending `TNTSource` and creating your own source.
+
+
+##### [tnt files store the ip](https://gist.github.com/CheaterTim/a79837d84604a09b142dfe038f909b96)
