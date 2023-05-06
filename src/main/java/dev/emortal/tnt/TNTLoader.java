@@ -33,8 +33,9 @@ public final class TNTLoader implements IChunkLoader {
         BlockManager blockManager = MinecraftServer.getBlockManager();
 
         byte[] byteArray = source.load().readAllBytes();
-        byte[] decompressed = Zstd.decompress(byteArray, (int) Zstd.decompressedSize(byteArray));
-        BinaryReader reader = new BinaryReader(decompressed);
+//        byte[] decompressed = Zstd.decompress(byteArray, (int) Zstd.decompressedSize(byteArray));
+//        BinaryReader reader = new BinaryReader(decompressed);
+        BinaryReader reader = new BinaryReader(byteArray);
         NBTReader nbtReader = new NBTReader(reader, CompressedProcesser.NONE);
 
         int chunks = reader.readInt();

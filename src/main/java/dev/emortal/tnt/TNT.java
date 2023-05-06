@@ -13,14 +13,14 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 public class TNT {
 
     private static Logger LOGGER = LoggerFactory.getLogger("TNT");
+
 
     private static byte[] convertChunk(Chunk chunk) throws IOException {
         BinaryWriter writer = new BinaryWriter();
@@ -29,7 +29,6 @@ public class TNT {
         writer.writeInt(chunk.getChunkZ());
         writer.writeByte((byte) chunk.getMinSection());
         writer.writeByte((byte) chunk.getMaxSection());
-//        LOGGER.info("Chunk {} {} min max {} {}", chunk.getChunkX(), chunk.getChunkZ(), chunk.getMinSection(), chunk.getMaxSection());
 
         int airSkip = 0;
         boolean needsEnding = false;
@@ -78,9 +77,6 @@ public class TNT {
         }
 
         byte[] bytes = writer.toByteArray();
-//        byte[] compressed = Zstd.compress(bytes);
-
-//        source.save(compressed);
 
         writer.close();
         writer.flush();
@@ -106,27 +102,13 @@ public class TNT {
             int rX = Integer.parseInt(args[1]);
             int rZ = Integer.parseInt(args[2]);
 
-//            LOGGER.info("Found mca x{} z{}", rX, rZ);
-
             for (int x = rX * 32; x < rX * 32 + 32; x++) {
                 for (int z = rZ * 32; z < rZ * 32 + 32; z++) {
                     convertInstance.loadChunk(x, z).thenAccept(chunk -> {
-
-                        // Ignore chunks that contain no blocks
-                        boolean containsBlocks = false;
-                        for (Section section : chunk.getSections()) {
-                            if (section.blockPalette().count() > 0) {
-                                containsBlocks = true;
-                                break;
-                            }
-                        }
-                        if (!containsBlocks) {
+                        if (!chunkContainsBlocks(chunk)) {
                             cdl.countDown();
                             return;
                         }
-
-//                        LOGGER.info("Using chunk {} {}", chunk.getChunkX(), chunk.getChunkZ());
-
 
                         byte[] converted = new byte[0];
                         try {
@@ -148,6 +130,8 @@ public class TNT {
 
         cdl.await();
 
+        MinecraftServer.getInstanceManager().unregisterInstance(convertInstance);
+
         BinaryWriter writer = new BinaryWriter();
 
         writer.writeInt(convertedChunks.size());
@@ -155,12 +139,54 @@ public class TNT {
             writer.writeBytes(chunk);
         }
 
-//        LOGGER.info("Wrote {} chunks", convertedChunks.size());
+        byte[] bytes = writer.toByteArray();
+        source.save(bytes);
+
+        writer.close();
+        writer.flush();
+    }
+
+
+    public static Collection<Chunk> filterEmptyChunks(Collection<Chunk> chunks) {
+        Set<Chunk> newChunks = new HashSet<>();
+
+        for (Chunk chunk : chunks) {
+            if (!chunkContainsBlocks(chunk)) continue;
+
+            newChunks.add(chunk);
+        }
+
+        return newChunks;
+    }
+
+    public static boolean chunkContainsBlocks(Chunk chunk) {
+        boolean containsBlocks = false;
+        for (Section section : chunk.getSections()) {
+            if (section.blockPalette().count() > 0) {
+                containsBlocks = true;
+                break;
+            }
+        }
+        return containsBlocks;
+    }
+
+    public static void convertChunksToTNT(Collection<Chunk> chunks, TNTSource source) throws IOException {
+        BinaryWriter writer = new BinaryWriter();
+
+        writer.writeInt(chunks.size());
+        for (Chunk chunk : chunks) {
+            byte[] converted = new byte[0];
+            try {
+                converted = convertChunk(chunk);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            writer.writeBytes(converted);
+        }
 
         byte[] bytes = writer.toByteArray();
-        byte[] compressed = Zstd.compress(bytes);
-
-        source.save(compressed);
+        source.save(bytes);
 
         writer.close();
         writer.flush();
