@@ -1,20 +1,20 @@
 <img src="https://github.com/EmortalMC/TNT/blob/main/.github/tntlogo.png?raw=true" width="40%">
 
 # TNT
-TNT is an experimental world format for Minestom
+TNT is a world format for Minestom designed for super fast loading, small file size and portability.
+
+TNT should only used for relatively small worlds.
 
 ## Cool stuff
-- Designed for small worlds (global palette)
 - Very fast loading times (23ms for my lobby - idk what Anvil is)
-- Very small file size (~80kb in TNT vs ~13mb in Anvil for my lobby)
+- Small file size (~80kb in TNT vs ~13mb in Anvil for my lobby)
 - [Converts from Anvil automatically](#anvil-conversion)
-- [Could be loaded from databases, like Slime worlds](#tnt-sources)
-- Stores block nbt (like sign text)
-- Stores cached light from anvil (useful because Minestom doesn't have a light engine yet)
+- [Very portable - can be loaded from databases](#tnt-sources)
+- Stores block nbt (e.g. sign text)
+- Stores cached light from Anvil (useful because Minestom doesn't have a light engine yet)
+- [World saving](#saving)
 
 Unfortunately does not save entities (yet) as Minestom does not have entity (de)serialisation.
-
-Also does not have world saving yet
 
 # Usage
 Creating a Minestom instance
@@ -50,5 +50,5 @@ For example, you could make it read from Redis, MongoDB, MySQL or any sort of da
 
 You can do this by extending `TNTSource` and creating your own source.
 
-
-##### [tnt files store the ip](https://gist.github.com/CheaterTim/a79837d84604a09b142dfe038f909b96)
+## Saving
+Use `TNT.convertChunksToTNT(chunkList, source)`
