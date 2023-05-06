@@ -5,6 +5,8 @@ TNT is a world format for Minestom designed for super fast loading, small file s
 
 TNT should only used for relatively small worlds.
 
+### ⚠ TNT is very experimental and is not backwards compatible at all. It will completely break when TNT or Minecraft updates. It is highly recommended to keep your original worlds.
+
 ## Cool stuff
 - Very fast loading times (23ms for my lobby - idk what Anvil is)
 - Small file size (~80kb in TNT vs ~13mb in Anvil for my lobby)
