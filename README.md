@@ -1,9 +1,9 @@
-<img src="https://github.com/EmortalMC/TNT/blob/main/.github/tntlogo.png?raw=true" width="40%">
+<img src="https://github.com/EmortalMC/TNT/blob/main/.github/tntlogo.png?raw=true" width="40%" alt="EmortalMC Banner">
 
 # TNT
-TNT is a world format for Minestom designed for super fast loading, small file size and portability.
+TNT is a world format for Minestom designed for super fast 🚀 loading and portability.
 
-TNT should only used for relatively small worlds.
+TNT should only be used for relatively small worlds.
 
 ### ⚠ TNT is very experimental and is not backwards compatible at all. It will completely break when TNT or Minecraft updates. It is highly recommended to keep your original worlds.
 
@@ -19,6 +19,16 @@ TNT should only used for relatively small worlds.
 Unfortunately does not save entities (yet) as Minestom does not have entity (de)serialisation.
 
 # Usage
+Importing via Gradle (browse versions [here](https://repo.emortal.dev/#/releases/dev/emortal/tnt/TNT))
+```groovy
+repositories {
+    maven { url "https://repo.emortal.dev/releases" }
+}
+
+dependencies {
+    implementation("dev.emortal.tnt:TNT:{releaseTag}")
+}
+```
 Creating a Minestom instance
 
 ```java
