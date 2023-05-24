@@ -1,10 +1,13 @@
 package dev.emortal.tnt;
 
-import com.github.luben.zstd.Zstd;
 import dev.emortal.tnt.source.TNTSource;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.instance.*;
+import net.minestom.server.instance.Chunk;
+import net.minestom.server.instance.DynamicChunk;
+import net.minestom.server.instance.IChunkLoader;
+import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.Section;
 import net.minestom.server.instance.batch.BatchOption;
 import net.minestom.server.instance.batch.ChunkBatch;
 import net.minestom.server.instance.block.Block;
@@ -13,7 +16,11 @@ import net.minestom.server.utils.binary.BinaryReader;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jglrxavpok.hephaistos.nbt.*;
+import org.jglrxavpok.hephaistos.nbt.CompressedProcesser;
+import org.jglrxavpok.hephaistos.nbt.NBT;
+import org.jglrxavpok.hephaistos.nbt.NBTCompound;
+import org.jglrxavpok.hephaistos.nbt.NBTException;
+import org.jglrxavpok.hephaistos.nbt.NBTReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +28,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 public final class TNTLoader implements IChunkLoader {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger("TNTLoader");
+    private static final Logger LOGGER = LoggerFactory.getLogger(TNTLoader.class);
 
     private final TNTSource source;
     public final Long2ObjectOpenHashMap<TNTChunk> chunksMap = new Long2ObjectOpenHashMap<>();

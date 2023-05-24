@@ -1,26 +1,27 @@
 package dev.emortal.tnt;
 
-import com.github.luben.zstd.Zstd;
 import dev.emortal.tnt.source.TNTSource;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.instance.*;
+import net.minestom.server.instance.AnvilLoader;
+import net.minestom.server.instance.Chunk;
+import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.instance.InstanceManager;
+import net.minestom.server.instance.Section;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.utils.binary.BinaryWriter;
 import org.jglrxavpok.hephaistos.nbt.NBTCompound;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 public class TNT {
-
-    private static Logger LOGGER = LoggerFactory.getLogger("TNT");
-
 
     private static byte[] convertChunk(Chunk chunk) throws IOException {
         BinaryWriter writer = new BinaryWriter();

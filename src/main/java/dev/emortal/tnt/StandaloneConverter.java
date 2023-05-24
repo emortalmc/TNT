@@ -9,18 +9,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static dev.emortal.tnt.source.FileTNTSource.getNameWithoutExtension;
-
 public class StandaloneConverter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StandaloneConverter.class);
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("StandaloneConverter");
+    private static final Path WORLDS_PATH = Path.of("worlds");
 
     public static void main(String[] args) throws IOException {
         MinecraftServer.init(); // We need the instance manager
 
-        Path path = Path.of("./worlds/");
-        Files.list(path).forEach((st) -> {
-            String worldName = getNameWithoutExtension(st.getFileName().toString());
+        Files.list(WORLDS_PATH).forEach(st -> {
+            String worldName = FileTNTSource.getNameWithoutExtension(st.getFileName().toString());
             Path actualPath = st.getParent().resolve(worldName + ".tnt");
 
             LOGGER.info("Beginning conversion for map " + worldName);
@@ -33,6 +31,7 @@ public class StandaloneConverter {
 
             LOGGER.info("Conversion finished for map " + worldName);
         });
-    }
 
+        System.exit(0);
+    }
 }

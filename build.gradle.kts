@@ -1,4 +1,3 @@
-
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
@@ -18,14 +17,10 @@ dependencies {
     //compileOnly(kotlin("stdlib"))
     //compileOnly(kotlin("reflect"))
 
-//    compileOnly("com.github.hollow-cube:Minestom:e6d4a2cc91")
-//    implementation("com.github.hollow-cube:Minestom:a7440639c8")
-    implementation("com.github.Minestom:Minestom:85febebd09")
+    implementation("dev.hollowcube:minestom-ce:7f3144337d")
+//    implementation("com.github.Minestom:Minestom:85febebd09")
 
     implementation("com.github.luben:zstd-jni:1.5.4-2")
-
-    // Only included for tests
-    testImplementation("ch.qos.logback:logback-classic:1.4.6")
 }
 
 tasks {
