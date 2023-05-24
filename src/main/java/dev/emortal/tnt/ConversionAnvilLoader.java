@@ -47,7 +47,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * A modified AnvilLoader simply to remove the annoying errors
  */
 public class ConversionAnvilLoader implements IChunkLoader {
-    private final static Logger LOGGER = LoggerFactory.getLogger(ConversionAnvilLoader.class);
+    private static final  Logger LOGGER = LoggerFactory.getLogger(ConversionAnvilLoader.class);
+    
+    private static final CompletableFuture<Void> COMPLETED_FUTURE = CompletableFuture.completedFuture(null);
     private static final Biome BIOME = Biome.PLAINS;
 
     private final Map<String, RegionFile> alreadyLoaded = new ConcurrentHashMap<>();
@@ -233,14 +235,14 @@ public class ConversionAnvilLoader implements IChunkLoader {
         final var nbt = instance.tagHandler().asCompound();
         if (nbt.isEmpty()) {
             // Instance has no data
-            return AsyncUtils.VOID_FUTURE;
+            return COMPLETED_FUTURE;
         }
         try (NBTWriter writer = new NBTWriter(Files.newOutputStream(levelPath))) {
             writer.writeNamed("", nbt);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return AsyncUtils.VOID_FUTURE;
+        return COMPLETED_FUTURE;
     }
 
     @Override
@@ -265,9 +267,9 @@ public class ConversionAnvilLoader implements IChunkLoader {
                     mcaFile = new RegionFile(new RandomAccessFile(regionFile, "rw"), regionX, regionZ);
                     alreadyLoaded.put(n, mcaFile);
                 } catch (AnvilException | IOException e) {
-                    LOGGER.error("Failed to save chunk " + chunkX + ", " + chunkZ, e);
+                    LOGGER.error("Failed to save chunk {},{}: {}", chunkX, chunkZ, e);
                     MinecraftServer.getExceptionManager().handleException(e);
-                    return AsyncUtils.VOID_FUTURE;
+                    return COMPLETED_FUTURE;
                 }
             }
         }
@@ -275,9 +277,9 @@ public class ConversionAnvilLoader implements IChunkLoader {
         try {
             column = mcaFile.getOrCreateChunk(chunkX, chunkZ);
         } catch (AnvilException | IOException e) {
-            LOGGER.error("Failed to save chunk " + chunkX + ", " + chunkZ, e);
+            LOGGER.error("Failed to save chunk {},{}: {}", chunkX, chunkZ, e);
             MinecraftServer.getExceptionManager().handleException(e);
-            return AsyncUtils.VOID_FUTURE;
+            return COMPLETED_FUTURE;
         }
         save(chunk, column);
         try {
@@ -285,11 +287,11 @@ public class ConversionAnvilLoader implements IChunkLoader {
             mcaFile.writeColumn(column);
             mcaFile.forget(column);
         } catch (IOException e) {
-            LOGGER.error("Failed to save chunk " + chunkX + ", " + chunkZ, e);
+            LOGGER.error("Failed to save chunk {},{}: {}", chunkX, chunkZ, e);
             MinecraftServer.getExceptionManager().handleException(e);
-            return AsyncUtils.VOID_FUTURE;
+            return COMPLETED_FUTURE;
         }
-        return AsyncUtils.VOID_FUTURE;
+        return COMPLETED_FUTURE;
     }
 
     private void save(Chunk chunk, ChunkColumn chunkColumn) {

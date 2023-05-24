@@ -10,8 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FileTNTSource implements TNTSource {
-
-    private static Logger LOGGER = LoggerFactory.getLogger("FileTNTSource");
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileTNTSource.class);
 
     private final Path path;
 
@@ -22,26 +21,28 @@ public class FileTNTSource implements TNTSource {
     @Override
     public InputStream load() {
         if (!Files.exists(path)) { // No world folder
-            if (Files.isDirectory(path.getParent().resolve(getNameWithoutExtension(path.getFileName().toString())))) {
+            String worldName = getNameWithoutExtension(path.getFileName().toString());
+
+            if (Files.isDirectory(path.getParent().resolve(worldName))) {
                 LOGGER.info("Path is an anvil world. Converting! (This might take a bit)");
 
                 try {
-                    TNT.convertAnvilToTNT(path.getParent().resolve(getNameWithoutExtension(path.getFileName().toString())), new FileTNTSource(path));
+                    TNT.convertAnvilToTNT(path.getParent().resolve(worldName), new FileTNTSource(path));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    LOGGER.error("Failed to convert world {} to TNT: {}", worldName, e);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                LOGGER.info("Converted!");
+                LOGGER.info("Converted world {} to TNT", worldName);
             } else {
-                LOGGER.error("Path doesn't exist!");
+                LOGGER.error("No TNT or Anvil world found at path: " + this.path);
             }
         }
 
         try {
             return Files.newInputStream(path);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to load TNT file {}: {}", path, e);
             return InputStream.nullInputStream();
         }
     }
