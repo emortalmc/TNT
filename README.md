@@ -5,7 +5,7 @@ TNT is a world format for Minestom designed for super fast 🚀 loading and port
 
 TNT should only be used for relatively small worlds.
 
-### ⚠ TNT is very experimental and is not backwards compatible at all. It will completely break when TNT or Minecraft updates. It is highly recommended to keep your original worlds.
+### ⚠ TNT is experimental and is not backwards compatible. Your worlds will break when TNT or Minecraft updates. It is highly recommended to keep your original worlds.
 
 ## Cool stuff
 - Very fast loading times (23ms for my lobby - idk what Anvil is)
@@ -13,7 +13,7 @@ TNT should only be used for relatively small worlds.
 - [Converts from Anvil automatically](#anvil-conversion)
 - [Very portable - can be loaded from databases](#tnt-sources)
 - Stores block nbt (e.g. sign text)
-- Stores cached light from Anvil (useful because Minestom doesn't have a light engine yet)
+- Stores cached light from Anvil (useful because only minestom-ce has a lighting engine)
 - [World saving](#saving)
 
 Unfortunately does not save entities (yet) as Minestom does not have entity (de)serialisation.
