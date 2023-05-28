@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
     java
     `maven-publish`
@@ -14,29 +12,9 @@ repositories {
 }
 
 dependencies {
-    //compileOnly(kotlin("stdlib"))
-    //compileOnly(kotlin("reflect"))
-
-    implementation("dev.hollowcube:minestom-ce:7f3144337d")
-//    implementation("com.github.Minestom:Minestom:85febebd09")
+    compileOnly("dev.hollowcube:minestom-ce:7f3144337d")
 
     implementation("com.github.luben:zstd-jni:1.5.4-2")
-}
-
-tasks {
-    processResources {
-        filesMatching("extension.json") {
-            expand(project.properties)
-        }
-    }
-
-    named<ShadowJar>("shadowJar") {
-        archiveBaseName.set(project.name)
-        mergeServiceFiles()
-        //minimize()
-    }
-
-    build { dependsOn(shadowJar) }
 }
 
 java {
