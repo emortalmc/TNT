@@ -6,7 +6,7 @@ TNT is a world format for Minestom designed for super fast 🚀 loading and port
 TNT should only be used for small worlds.
 
 
-#### Check out the [polar](https://github.com/hollow-cube/polar) world format created by Hollow Cube. It is more tolerant towards version updates and will generally work better.
+## Check out the [polar](https://github.com/hollow-cube/polar) world format created by Hollow Cube. It handles version updates and will work better.
 
 ### ⚠ TNT is experimental and is not backwards compatible. Your worlds will break when TNT or Minecraft updates. It is highly recommended to keep your original worlds.
 
