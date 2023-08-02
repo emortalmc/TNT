@@ -10,6 +10,10 @@ TNT should only be used for small worlds.
 
 ### ⚠ TNT is experimental and is not backwards compatible. Your worlds will break when TNT or Minecraft updates. It is highly recommended to keep your original worlds.
 
+## Upgrading to a new major version
+A major version change (e.g. v1.2.3 -> v2.0.0) indicates there is an incompatible breaking change in TNT.
+This may require re-converting your world or other manual actions.
+
 ## Cool stuff
 - Very fast loading times (23ms for my lobby - idk what Anvil is)
 - Small file size (~80kb in TNT vs ~13mb in Anvil for my lobby)
